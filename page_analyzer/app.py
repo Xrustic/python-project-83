@@ -1,10 +1,9 @@
 from flask import Flask, render_template
 from flask import get_flashed_messages
-import os
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.secret_key = 'secret key'
 
 
 @app.route('/')

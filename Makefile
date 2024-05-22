@@ -3,7 +3,7 @@ install:
 	pip install gunicorn
 
 build:
-	poetry build
+	./build.sh
 
 publish:
 	poetry publish --dry-run

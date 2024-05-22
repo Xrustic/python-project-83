@@ -45,9 +45,8 @@ def add_url():
             url=url,
             messages=messages,
         ), 422
-    old_url = repo.find(name=url)
-    if not old_url:
-        repo.add(url)
+    if not repo.find_urls(name=url):
+        repo.add_url(url)
         flash(f'Добавлен новый сайт {url}', 'success')
     else:
         flash(f'Сайт уже присутствует {url}', 'warning')
@@ -59,7 +58,7 @@ def urls():
     messages = get_flashed_messages(with_categories=True)
     return render_template(
         'urls.html',
-        urls=repo.get_all(),
+        url_items=repo.get_all_url(),
         messages=messages,
     )
 
@@ -67,13 +66,32 @@ def urls():
 @app.route('/urls/<id>')
 def url_view(id):
     messages = get_flashed_messages(with_categories=True)
-    url = repo.find(id=id)
-    if url:
+    url_item = repo.find_one_url(id=id)
+    checks = repo.find_checks(id=id)
+    print('checks =', checks)
+    if url_item:
         return render_template(
             'url.html',
-            url=url[0],
+            url_item=url_item,
             messages=messages,
+            checks=checks,
         )
     return render_template(
            'not_found.html',
     ), 404
+
+
+@app.post('/urls/<id>/checks')
+def url_check(id):
+    result = False
+    url_item = repo.find_one_url(id=id)
+    print('url_item =', url_item)
+    if url_item:
+        url = url_item.name
+        print('url =', url)
+        result = repo.add_check(url)
+    if result:
+        flash(f'Checked {id}', 'success')
+    else:
+        flash(f'Check error {id}', 'danger')
+    return redirect(url_for('url_view', id=id))

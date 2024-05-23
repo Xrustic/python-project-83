@@ -91,7 +91,7 @@ class UrlsRepository:
         print('value =', value)
         if value:
             with self.conn.cursor(cursor_factory=NamedTupleCursor) as curs:
-                curs.execute(f'{"SELECT * from url_checks"
-                             " WHERE url_id=%s"}', (value,))
+                curs.execute(f'{"SELECT * from url_checks"}'
+                             f'{" WHERE url_id=%s"}', (value,))
                 result = curs.fetchall()
         return result

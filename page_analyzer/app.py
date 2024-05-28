@@ -7,8 +7,9 @@ from flask import (
     request,
     url_for,
 )
-from . repository import UrlsRepository
-from . validator import validate
+from .repository import UrlsRepository
+from .validator import validate
+from .checker import check_url
 import os
 from dotenv import load_dotenv
 
@@ -68,7 +69,6 @@ def url_view(id):
     messages = get_flashed_messages(with_categories=True)
     url_item = repo.find_one_url(id=id)
     checks = repo.find_checks(id=id)
-    print('checks =', checks)
     if url_item:
         return render_template(
             'url.html',
@@ -88,10 +88,12 @@ def url_check(id):
     print('url_item =', url_item)
     if url_item:
         url = url_item.name
-        print('url =', url)
-        result = repo.add_check(url)
+        result_check = check_url(url)
+        if result_check['result']:
+            print('url =', url)
+            result = repo.add_check(url, result_check)
     if result:
-        flash(f'Checked {id}', 'success')
+        flash('Страница успешно проверена', 'success')
     else:
-        flash(f'Check error {id}', 'danger')
+        flash('Произошла ошибка при проверке', 'danger')
     return redirect(url_for('url_view', id=id))

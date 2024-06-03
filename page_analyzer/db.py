@@ -1,32 +1,64 @@
-import datetime
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
-from page_analyzer.validator import crop_str
+import datetime
 
 
-class UrlsRepository:
+class DatabaseManager:
     database_url = None
 
     def __init__(self, database_url):
         self.database_url = database_url
 
-    def __connect(self, conn=None):
-        if conn is None:
-            conn = psycopg2.connect(self.database_url)
-            return conn
+    @staticmethod
+    def execute_in_db(func):
+        """Декоратор для выполнения функций соединения с базой данных."""
+        def inner(*args, **kwargs):
+            with psycopg2.connect(args[0].app.config['DATABASE_URL']) as conn:
+                with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+                    result = func(cursor=cursor, *args, **kwargs)
+                    conn.commit()
+                    return result
+        return inner
 
-    def __do_insert(self, query, values, conn=None):
-        conn = self.__connect(conn)
-        with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
-            curs.execute(query, values)
-        conn.commit()
+    @staticmethod
+    def with_commit(func):
+        def inner(self, *args, **kwargs):
+            database = self.app.config['DATABASE_URL']
+            try:
+                with psycopg2.connect(database) as connection:
+                    cursor = connection.cursor(cursor_factory=NamedTupleCursor)
+                    result = func(self, cursor, *args, **kwargs)
+                    connection.commit()
+                    return result
+            except psycopg2.Error as e:
+                print(f'Ошибка при выполнении транзакции: {e}')
+                raise e
+        return inner
 
-    def __do_select(self, query, values=None, conn=None):
-        conn = self.__connect(conn)
-        with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
-            curs.execute(query, values)
-            result = curs.fetchall()
-        return result
+    @with_commit
+    def insert_url(self, cursor, url):
+        date = datetime.date.today()
+        cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)"
+                       "RETURNING *", (url, date))
+        url_data = cursor.fetchone()
+        return url_data
+    # def __connect(self, conn=None):
+    #     if conn is None:
+    #         conn = psycopg2.connect(self.database_url)
+    #         return conn
+
+    # def __do_insert(self, query, values, conn=None):
+    #     conn = self.__connect(conn)
+    #     with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+    #         curs.execute(query, values)
+    #     conn.commit()
+
+    # def __do_select(self, query, values=None, conn=None):
+    #     conn = self.__connect(conn)
+    #     with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+    #         curs.execute(query, values)
+    #         result = curs.fetchall()
+    #     return result
 
     def add_url(self, url, conn=None):
         conn = self.__connect(conn)
@@ -99,7 +131,7 @@ class UrlsRepository:
         status_code = result_check['status_code']
         h1 = result_check['h1']
         title = result_check['title'][:110]
-        description = crop_str(result_check['description'], 160)
+        description = result_check['description'], 160
         query = """INSERT INTO url_checks
             (url_id, status_code, h1, title, description, created_at)
             VALUES (%s, %s, %s, %s, %s, %s);"""

@@ -2,16 +2,16 @@ DROP TABLE IF EXISTS url_checks;
 DROP TABLE IF EXISTS urls;
 
 CREATE TABLE urls (
-	id bigint PRIMARY KEY,
-	name varchar(255) NOT NULL,
-	created_at date DEFAULT CURRENT_TIMESTAMP
+	id BIGINT PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	created_at DATE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE url_checks (
-	id bigint PRIMARY KEY,
+	id BIGINT PRIMARY KEY,
 	url_id bigint REFERENCES urls (id),
 	status_code int,
-	h1 varchar(70),
-	title varchar(110),
-	description varchar(160),
-	created_at date DEFAULT CURRENT_TIMESTAMP
+	h1 VARCHAR(70),
+	title VARCHAR(110),
+	description VARCHAR(160),
+	created_at DATE DEFAULT CURRENT_TIMESTAMP
 );

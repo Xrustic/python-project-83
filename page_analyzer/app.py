@@ -55,7 +55,7 @@ def urls():
 
 @app.route('/urls/<int:id>')
 def url_view(id):
-    url_item = db_manager.find_one_url_by_id(id)
+    url_item = db_manager.find_urls_by_id(id)
     checks = db_manager.find_checks_by_id(id)
     if url_item:
         return render_template('url.html', url_item=url_item, checks=checks,)
@@ -65,7 +65,7 @@ def url_view(id):
 @app.post('/urls/<int:id>/checks')
 def url_check(id):
     result = False
-    url_item = db_manager.find_one_url_by_id(id)
+    url_item = db_manager.find_urls_by_id(id)
     if url_item:
         url = url_item.name
         result_check = extract_page_data(url)

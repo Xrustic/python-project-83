@@ -1,6 +1,7 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 import datetime
+import args
 
 
 class DatabaseManager:
@@ -50,16 +51,18 @@ class DatabaseManager:
             return conn
 
     def __do_insert(self, query, values, conn=None):
-        conn = self.__connect(conn)
-        with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
-            curs.execute(query, values)
+        with psycopg2.connect(args[0].app.config['DATABASE_URL']) as conn:
+            conn = self.__connect(conn)
+            with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+                cursor.execute(query, values)
         conn.commit()
 
     def __do_select(self, query, values=None, conn=None):
-        conn = self.__connect(conn)
-        with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
-            curs.execute(query, values)
-            result = curs.fetchall()
+        with psycopg2.connect(args[0].app.config['DATABASE_URL']) as conn:
+            conn = self.__connect(conn)
+            with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+                cursor.execute(query, values)
+                result = cursor.fetchall()
         return result
 
     def add_url(self, url, conn=None):

@@ -39,7 +39,7 @@ def add_url():
     if error:
         flash(validation_error, 'danger')
         return render_template('index.html'), 422
-    url_id = db_manager.get_url_by_name(normal_url)
+    url_id = db_manager.find_urls_by_name(normal_url)
     if url_id:
         flash('Страница уже существует', 'warning')
         return redirect(url_for('get_url_list', id=url_id))

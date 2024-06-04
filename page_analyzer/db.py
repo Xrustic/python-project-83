@@ -52,7 +52,6 @@ class DatabaseManager:
             except psycopg2.Error as e:
                 print(f'Ошибка при выполнении транзакции: {e}')
                 raise e
-
         return inner
 
     def add_url(self, url, conn=None):
@@ -65,14 +64,16 @@ class DatabaseManager:
         query = """INSERT INTO urls (name, created_at)
             VALUES (%s, %s);"""
         item_tuple = (url, current_date)
-        self.with_commit(query, item_tuple, conn)
+        res = query, item_tuple, conn
+        self.with_commit(res)
         result = self.find_urls_by_name(url, conn)
         return result, True
 
     def find_urls_by_id(self, id, conn=None):
         conn = self.execute_in_db(conn)
         query = "SELECT * from urls WHERE id=%s"
-        result = self.with_commit(query, (id,), conn)
+        res = query, (id,), conn
+        result = self.with_commit(res)
         if result:
             result = result[0]
         return result
@@ -83,7 +84,8 @@ class DatabaseManager:
         value = str(name)
         if value:
             query = "SELECT * from urls WHERE name=%s"
-            result = self.with_commit(query, (value,), conn)
+            res = query, (value,), conn
+            result = self.with_commit(res)
         if result:
             result = result[0]
         return result
@@ -96,7 +98,7 @@ class DatabaseManager:
             LEFT JOIN url_checks AS uc on uc.url_id = ur.id
             GROUP BY ur.id, ur.name, ur.created_at, uc.status_code
             ORDER BY ur.id DESC;"""
-        result = self.with_commit(query, conn=conn)
+        result = self.with_commit(query)
         return result
 
     def add_check(self, url, result_check, conn=None):
@@ -116,7 +118,8 @@ class DatabaseManager:
             VALUES (%s, %s, %s, %s, %s, %s);"""
         item_tuple = (url_id, status_code,
                       h1, title, description, current_date)
-        self.with_commit(query, item_tuple, conn)
+        res = query, item_tuple, conn
+        self.with_commit(res)
         return True
 
     def find_checks_by_id(self, id, conn=None):
@@ -125,5 +128,6 @@ class DatabaseManager:
         value = str(id)
         if value:
             query = "SELECT * from url_checks WHERE url_id=%s"
-            result = self.with_commit(query, (value,), conn)
+            res = query, (value,), conn
+            result = self.with_commit(res)
         return result

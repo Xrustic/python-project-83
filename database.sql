@@ -6,9 +6,10 @@ CREATE TABLE urls (
 	name VARCHAR(255) NOT NULL,
 	created_at DATE DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE url_checks (
 	id BIGINT PRIMARY KEY,
-	url_id bigint REFERENCES urls (id),
+	url_id BIGINT REFERENCES urls (id),
 	status_code int,
 	h1 VARCHAR(70),
 	title VARCHAR(110),

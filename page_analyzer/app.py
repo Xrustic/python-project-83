@@ -18,7 +18,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
+# app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
 
 db_manager = DatabaseManager(app.config)
 
@@ -32,6 +32,7 @@ def index():
 @app.post('/urls')
 def add_url():
     url_check = request.form.get('url')
+    print(url_check)
     normal_url = normalize_url(url_check)
     data = request.form.to_dict()
     url = data.get('url')
@@ -51,7 +52,7 @@ def add_url():
 
 @app.route('/urls')
 def urls():
-    return render_template('urls.html', url_items=db_manager.get_all_url(),)
+    return render_template('urls.html',)
 
 
 @app.route('/urls/<int:id>')

@@ -1,6 +1,10 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 import datetime
+import os
+
+
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 class DatabaseManager:
@@ -9,31 +13,12 @@ class DatabaseManager:
     def __init__(self, app):
         self.app = app
 
-    # def __connect(self, conn=None):
-    #     if conn is None:
-    #         conn = psycopg2.connect(self.database_url)
-    #         return conn
-
-    # def __do_insert(self, query, values, *args, conn=None):
-    #     with psycopg2.connect(args[0].app.config['DATABASE_URL']) as conn:
-    #         conn = self.__connect(conn)
-    #         with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
-    #             cursor.execute(query, values)
-    #     conn.commit()
-
-    # def __do_select(self, query, values=None, *args, conn=None):
-    #     with psycopg2.connect(args[0].app.config['DATABASE_URL']) as conn:
-    #         conn = self.__connect(conn)
-    #         with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
-    #             cursor.execute(query, values)
-    #             result = cursor.fetchall()
-    #     return result
-
     @staticmethod
     def execute_in_db(func):
         """Декоратор для выполнения функций соединения с базой данных."""
         def inner(*args, **kwargs):
-            with psycopg2.connect(args[0]['DATABASE_URL']) as conn:
+            print(args, 'execute')
+            with psycopg2.connect(DATABASE_URL) as conn:
                 with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
                     result = func(cursor=cursor, *args, **kwargs)
                     conn.commit()
@@ -43,20 +28,30 @@ class DatabaseManager:
     @staticmethod
     def with_commit(func):
         def inner(self, *args, **kwargs):
+            print(self, 'with commit')
             try:
-                with psycopg2.connect(args[0]['DATABASE_URL']) as conn:
-                    cursor = conn.cursor(cursor_factory=NamedTupleCursor)
+                with psycopg2.connect(DATABASE_URL) as connection:
+                    cursor = connection.cursor(cursor_factory=NamedTupleCursor)
                     result = func(self, cursor, *args, **kwargs)
-                    conn.commit()
+                    connection.commit()
                     return result
             except psycopg2.Error as e:
                 print(f'Ошибка при выполнении транзакции: {e}')
                 raise e
         return inner
 
+    @with_commit
+    def insert_url(self, cursor, url):
+        date = datetime.date.today()
+        cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)"
+                       "RETURNING *", (url, date))
+        url_data = cursor.fetchone()
+        return url_data
+
     def add_url(self, url, conn=None):
         conn = self.execute_in_db(conn)
         result = self.find_urls_by_name(url, conn)
+        print(result, 'add url')
         if result:
             return result, False
 
@@ -64,19 +59,18 @@ class DatabaseManager:
         query = """INSERT INTO urls (name, created_at)
             VALUES (%s, %s);"""
         item_tuple = (url, current_date)
-        res = query, item_tuple, conn
-        self.with_commit(res)
+        self.insert_url(query, item_tuple, conn)
         result = self.find_urls_by_name(url, conn)
         return result, True
 
     def find_urls_by_id(self, id, conn=None):
         conn = self.execute_in_db(conn)
         query = "SELECT * from urls WHERE id=%s"
-        res = query, (id,), conn
-        result = self.with_commit(res)
+        result = self.insert_url(query, (id,), conn)
+        print(result, 'find urls by id')
         if result:
-            result = result[0]
-        return result
+            result1 = result[0]
+        return result1
 
     def find_urls_by_name(self, name, conn=None):
         conn = self.execute_in_db(conn)
@@ -84,11 +78,10 @@ class DatabaseManager:
         value = str(name)
         if value:
             query = "SELECT * from urls WHERE name=%s"
-            res = query, (value,), conn
-            result = self.with_commit(res)
+            result = self.insert_url(query, value, conn)
         if result:
-            result = result[0]
-        return result
+            result1 = result[0]
+        return result1
 
     def get_all_url(self, conn=None):
         conn = self.execute_in_db(conn)
@@ -98,7 +91,7 @@ class DatabaseManager:
             LEFT JOIN url_checks AS uc on uc.url_id = ur.id
             GROUP BY ur.id, ur.name, ur.created_at, uc.status_code
             ORDER BY ur.id DESC;"""
-        result = self.with_commit(query)
+        result = self.insert_url(query, conn=conn)
         return result
 
     def add_check(self, url, result_check, conn=None):
@@ -118,8 +111,7 @@ class DatabaseManager:
             VALUES (%s, %s, %s, %s, %s, %s);"""
         item_tuple = (url_id, status_code,
                       h1, title, description, current_date)
-        res = query, item_tuple, conn
-        self.with_commit(res)
+        self.insert_url(query, item_tuple, conn)
         return True
 
     def find_checks_by_id(self, id, conn=None):
@@ -128,6 +120,5 @@ class DatabaseManager:
         value = str(id)
         if value:
             query = "SELECT * from url_checks WHERE url_id=%s"
-            res = query, (value,), conn
-            result = self.with_commit(res)
+            result = self.insert_url(query, (value,), conn)
         return result

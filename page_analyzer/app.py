@@ -13,12 +13,10 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-DATABASE_URL = os.getenv('DATABASE_URL')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-# app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
 
 db_manager = DatabaseManager(app.config)
 

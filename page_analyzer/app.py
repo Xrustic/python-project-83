@@ -30,7 +30,6 @@ def index():
 @app.post('/urls')
 def add_url():
     url_check = request.form.get('url')
-    print(url_check)
     normal_url = normalize_url(url_check)
     data = request.form.to_dict()
     url = data.get('url')
@@ -39,7 +38,7 @@ def add_url():
     if error:
         flash(validation_error, 'danger')
         return render_template('index.html'), 422
-    url_id = db_manager.find_urls_by_name(normal_url)
+    url_id = db_manager.find_url_by_name(normal_url)
     if url_id:
         flash('Страница уже существует', 'warning')
         return redirect(url_for('get_url_list', id=url_id))
@@ -55,7 +54,7 @@ def urls():
 
 @app.route('/urls/<int:id>')
 def url_view(id):
-    url_item = db_manager.find_urls_by_id(id)
+    url_item = db_manager.find_url_by_id(id)
     checks = db_manager.find_checks_by_id(id)
     if url_item:
         return render_template('url.html', url_item=url_item, checks=checks,)
@@ -65,7 +64,7 @@ def url_view(id):
 @app.post('/urls/<int:id>/checks')
 def url_check(id):
     result = False
-    url_item = db_manager.find_urls_by_id(id)
+    url_item = db_manager.find_url_by_id(id)
     if url_item:
         url = url_item.name
         result_check = extract_page_data(url)

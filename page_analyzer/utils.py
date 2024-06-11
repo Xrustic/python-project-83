@@ -17,9 +17,6 @@ def validate(url):
 
 def normalize_url(url):
     parsed_url = urlparse(url)
-    print(parsed_url)
     normalized_scheme = parsed_url.scheme.lower()
-    print(normalized_scheme)
     normalized_host = parsed_url.hostname.lower()
-    print(normalized_host)
     return f'{normalized_scheme}://{normalized_host}'

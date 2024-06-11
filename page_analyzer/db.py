@@ -39,7 +39,7 @@ class DatabaseManager:
         return inner
 
     @with_commit
-    def insert_url(cursor, url):
+    def insert_url(self, cursor, url):
         date = datetime.date.today()
         cursor.execute("""INSERT INTO urls (name, created_at) VALUES (%s, %s)
                        RETURNING *""", (url, date))
@@ -49,7 +49,6 @@ class DatabaseManager:
     # def add_url(self, url, conn=None):
     #     conn = self.execute_in_db(conn)
     #     result = self.find_url_by_name(url, conn)
-    #     print(result, 'add url')
     #     if result:
     #         return result, False
 
@@ -65,13 +64,12 @@ class DatabaseManager:
     #     conn = self.execute_in_db(conn)
     #     query = "SELECT * from urls WHERE id=%s"
     #     result = self.insert_url(query, (id,), conn)
-    #     print(result, 'find urls by id')
     #     if result:
     #         result1 = result[0]
     #     return result1
 
     @execute_in_db
-    def find_url_by_name(name, cursor):
+    def find_url_by_name(self, name, cursor):
         value = str(name)
         cursor.execute("SELECT * from urls WHERE name=%s", (value,))
         url_id = cursor.fetchone()
@@ -91,7 +89,7 @@ class DatabaseManager:
     # def add_check(self, url, result_check, conn=None):
     #     conn = self.execute_in_db(conn)
     #     current_date = datetime.datetime.now()
-    #     url_item = self.find_urls_by_name(url, conn)
+    #     url_item = self.find_url_by_name(url, conn)
     #     if url_item:
     #         url_id = url_item.id
     #     else:

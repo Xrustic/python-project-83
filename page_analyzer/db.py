@@ -46,27 +46,25 @@ class DatabaseManager:
         url_data = cursor.fetchone()
         return url_data
 
-    # def add_url(self, url, conn=None):
-    #     conn = self.execute_in_db(conn)
-    #     result = self.find_url_by_name(url, conn)
-    #     if result:
-    #         return result, False
+    def add_url(self, url, conn=None):
+        conn = self.execute_in_db(conn)
+        result = self.find_url_by_name(url, conn)
+        if result:
+            return result, False
 
-    #     current_date = datetime.datetime.now()
-    #     query = """INSERT INTO urls (name, created_at)
-    #         VALUES (%s, %s);"""
-    #     item_tuple = (url, current_date)
-    #     self.insert_url(query, item_tuple, conn)
-    #     result = self.find_url_by_name(url, conn)
-    #     return result, True
+        current_date = datetime.datetime.now()
+        query = """INSERT INTO urls (name, created_at)
+            VALUES (%s, %s);"""
+        item_tuple = (url, current_date)
+        self.insert_url(query, item_tuple, conn)
+        result = self.find_url_by_name(url, conn)
+        return result, True
 
-    # def find_url_by_id(self, id, conn=None):
-    #     conn = self.execute_in_db(conn)
-    #     query = "SELECT * from urls WHERE id=%s"
-    #     result = self.insert_url(query, (id,), conn)
-    #     if result:
-    #         result1 = result[0]
-    #     return result1
+    @execute_in_db
+    def find_url_by_id(self, id, cursor):
+        cursor.execute("SELECT * from urls WHERE id=%s", (id,))
+        url_id = cursor.fetchone()
+        return url_id.id if url_id else None
 
     @execute_in_db
     def find_url_by_name(self, name, cursor):
@@ -75,42 +73,41 @@ class DatabaseManager:
         url_id = cursor.fetchone()
         return url_id.id if url_id else None
 
-    # def get_all_url(self, conn=None):
-    #     conn = self.execute_in_db(conn)
-    #     query = """SELECT ur.id, ur.name, ur.created_at,
-    #         max(uc.created_at) as last_check, uc.status_code
-    #         FROM urls AS ur
-    #         LEFT JOIN url_checks AS uc on uc.url_id = ur.id
-    #         GROUP BY ur.id, ur.name, ur.created_at, uc.status_code
-    #         ORDER BY ur.id DESC;"""
-    #     result = self.insert_url(query, conn=conn)
-    #     return result
+    @execute_in_db
+    def get_all_urls(self, cursor):
+        query = """SELECT ur.id, ur.name, ur.created_at,
+            max(uc.created_at) as last_check, uc.status_code
+            FROM urls AS ur
+            LEFT JOIN url_checks AS uc on uc.url_id = ur.id
+            GROUP BY ur.id, ur.name, ur.created_at, uc.status_code
+            ORDER BY ur.id DESC;"""
+        cursor.execute(query)
+        url_id = cursor.fetchall()
+        return url_id
 
-    # def add_check(self, url, result_check, conn=None):
-    #     conn = self.execute_in_db(conn)
-    #     current_date = datetime.datetime.now()
-    #     url_item = self.find_url_by_name(url, conn)
-    #     if url_item:
-    #         url_id = url_item.id
-    #     else:
-    #         return False
-    #     status_code = result_check['status_code']
-    #     h1 = result_check['h1']
-    #     title = result_check['title'][:110]
-    #     description = result_check['description'], 160
-    #     query = """INSERT INTO url_checks
-    #         (url_id, status_code, h1, title, description, created_at)
-    #         VALUES (%s, %s, %s, %s, %s, %s);"""
-    #     item_tuple = (url_id, status_code,
-    #                   h1, title, description, current_date)
-    #     self.insert_url(query, item_tuple, conn)
-    #     return True
+    def add_check(self, url, result_check, conn=None):
+        conn = self.execute_in_db(conn)
+        current_date = datetime.datetime.now()
+        url_item = self.find_url_by_name(url, conn)
+        if url_item:
+            url_id = url_item.id
+        else:
+            return False
+        status_code = result_check['status_code']
+        h1 = result_check['h1']
+        title = result_check['title'][:110]
+        description = result_check['description'], 160
+        query = """INSERT INTO url_checks
+            (url_id, status_code, h1, title, description, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s);"""
+        item_tuple = (url_id, status_code,
+                      h1, title, description, current_date)
+        self.insert_url(query, item_tuple, conn)
+        return True
 
-    # def find_checks_by_id(self, id, conn=None):
-    #     conn = self.execute_in_db(conn)
-    #     result = None
-    #     value = str(id)
-    #     if value:
-    #         query = "SELECT * from url_checks WHERE url_id=%s"
-    #         result = self.insert_url(query, (value,), conn)
-    #     return result
+    @execute_in_db
+    def find_checks_by_id(self, id, cursor):
+        value = str(id)
+        cursor.execute("SELECT * from urls WHERE id=%s", (value,))
+        url_id = cursor.fetchone()
+        return url_id.id if url_id else None

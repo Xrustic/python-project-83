@@ -41,21 +41,24 @@ def add_url():
     url_id = db_manager.find_url_by_name(normal_url)
     if url_id:
         flash('Страница уже существует', 'warning')
-        return redirect(url_for('get_url_list', id=url_id))
+        return redirect(url_for('url_view', id=url_id))
     url = db_manager.insert_url(normal_url)
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('get_url_list', id=url.id))
+    return redirect(url_for('url_view', id=url.id))
 
 
 @app.route('/urls')
 def urls():
-    return render_template('urls.html',)
+    urls_data = db_manager.get_all_urls()
+    return render_template('urls.html', urls=urls_data)
 
 
 @app.route('/urls/<int:id>')
 def url_view(id):
     url_item = db_manager.find_url_by_id(id)
+    print(url_item, 'url_view')
     checks = db_manager.find_checks_by_id(id)
+    print(checks, 'url_view1')
     if url_item:
         return render_template('url.html', url_item=url_item, checks=checks,)
     return render_template('not_found.html',), 404
@@ -63,6 +66,7 @@ def url_view(id):
 
 @app.post('/urls/<int:id>/checks')
 def url_check(id):
+    print(id, 'check')
     result = False
     url_item = db_manager.find_url_by_id(id)
     if url_item:

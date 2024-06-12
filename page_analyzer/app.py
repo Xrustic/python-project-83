@@ -71,6 +71,7 @@ def url_check(id):
         url = url_item.name
         id = url_item.id
         result_check = extract_page_data(url)
+        print(result_check, '---res check')
         if result_check:
             result = db_manager.add_check(id, result_check)
     if result:

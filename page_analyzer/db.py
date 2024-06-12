@@ -125,20 +125,22 @@ class DatabaseManager:
     #     return True
     @execute_in_db
     def add_check(self, url, result_check, cursor):
-        checks = cursor.execute(
+        print(cursor.execute(
             '''INSERT INTO url_checks (url_id, status_code, h1, title,
             description, created_at)
             VALUES (%s, %s, %s, %s, %s, %s)''',
             (url, result_check['status_code'], result_check['h1'],
              result_check['title'], result_check['description'],
              datetime.datetime.now())
-        )
+        ))
+        checks = cursor.fetchone()
         print(checks, 'check')
         return checks
 
     @execute_in_db
     def find_checks_by_id(self, id, cursor):
         value = str(id)
-        cursor.execute("SELECT * from urls WHERE id=%s", (value,))
+        cursor.execute("SELECT * from url_checks WHERE url_id=%s", (value,))
         checks = cursor.fetchall()
+        print(checks, 'view')
         return checks

@@ -25,7 +25,7 @@ urls
             {{ url.name }}
           </a>
         </td>
-        <td>Последняя проверка</td>
+        <td>{{ url.last_checked|default('', true) }}</td>
         <td>{{ url.status_code|default('', true) }}</td>
       </tr>
       {% endfor %}

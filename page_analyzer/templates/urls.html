@@ -26,7 +26,7 @@ urls
           </a>
         </td>
         <td>Последняя проверка</td>
-        <td>{{ url_item.status_code|default('', true) }}</td>
+        <td>{{ url.status_code|default('', true) }}</td>
       </tr>
       {% endfor %}
       </tbody>

@@ -56,9 +56,7 @@ def urls():
 @app.route('/urls/<int:id>')
 def url_view(id):
     url_item = db_manager.find_url_by_id(id)
-    print(url_item, 'url_view')
     checks = db_manager.find_checks_by_id(id)
-    print(checks, 'url_view1')
     if url_item:
         return render_template('url.html', url_item=url_item, checks=checks,)
     return render_template('not_found.html',), 404
@@ -66,14 +64,15 @@ def url_view(id):
 
 @app.post('/urls/<int:id>/checks')
 def url_check(id):
-    print(id, 'check')
     result = False
     url_item = db_manager.find_url_by_id(id)
+    print(url_item, '-----')
     if url_item:
         url = url_item.name
+        id = url_item.id
         result_check = extract_page_data(url)
-        if result_check['result']:
-            result = db_manager.add_check(url, result_check)
+        if result_check:
+            result = db_manager.add_check(id, result_check)
     if result:
         flash('Страница успешно проверена', 'success')
     else:

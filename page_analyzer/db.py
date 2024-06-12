@@ -2,6 +2,8 @@ import psycopg2
 from psycopg2.extras import NamedTupleCursor
 import datetime
 import os
+# import requests
+# from bs4 import BeautifulSoup
 
 
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -64,7 +66,7 @@ class DatabaseManager:
     def find_url_by_id(self, id, cursor):
         cursor.execute("SELECT * from urls WHERE id=%s", (id,))
         url_id = cursor.fetchone()
-        return url_id.id if url_id else None
+        return url_id
 
     @execute_in_db
     def find_url_by_name(self, name, cursor):
@@ -75,39 +77,68 @@ class DatabaseManager:
 
     @execute_in_db
     def get_all_urls(self, cursor):
-        query = """SELECT ur.id, ur.name, ur.created_at,
-            max(uc.created_at) as last_check, uc.status_code
-            FROM urls AS ur
-            LEFT JOIN url_checks AS uc on uc.url_id = ur.id
-            GROUP BY ur.id, ur.name, ur.created_at, uc.status_code
-            ORDER BY ur.id DESC;"""
+        query = '''
+            SELECT u.id, u.name, MAX(c.created_at) AS last_checked,
+            MAX(c.status_code) AS last_status_code
+            FROM urls u
+            LEFT JOIN url_checks c ON u.id = c.url_id
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        '''
         cursor.execute(query)
-        url_id = cursor.fetchall()
-        return url_id
+        urls_data = cursor.fetchall()
+        return urls_data
 
-    def add_check(self, url, result_check, conn=None):
-        conn = self.execute_in_db(conn)
-        current_date = datetime.datetime.now()
-        url_item = self.find_url_by_name(url, conn)
-        if url_item:
-            url_id = url_item.id
-        else:
-            return False
-        status_code = result_check['status_code']
-        h1 = result_check['h1']
-        title = result_check['title'][:110]
-        description = result_check['description'], 160
-        query = """INSERT INTO url_checks
-            (url_id, status_code, h1, title, description, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s);"""
-        item_tuple = (url_id, status_code,
-                      h1, title, description, current_date)
-        self.insert_url(query, item_tuple, conn)
-        return True
+    # def fetch_and_parse_url(url):
+    #     try:
+    #         response = requests.get(url)
+    #         if response.status_code == 200:
+    #             soup = BeautifulSoup(response.content, 'html.parser')
+    #             return {
+    #                 'title': soup.find('title').text if soup.find('title')
+    #                 else None,
+    #                 'h1': soup.find('h1').text if soup.find('h1') else None,
+    #                 'description': soup.find('meta',
+    #                                          attrs={'name': 'description'})
+    #                 ['content'] if soup.find('meta',
+    #                                          attrs={'name': 'description'})
+    #                 else None,
+    #                 'status_code': response.status_code
+    #             }
+    #         else:
+    #             return {'error': 'Произошла ошибка при проверке'}
+    #     except requests.RequestException:
+    #         return {'error': 'Произошла ошибка при проверке'}
+
+    # @execute_in_db
+    # def add_check(self, url, result_check, cursor):
+    #     status_code = result_check['status_code']
+    #     h1 = result_check['h1']
+    #     title = result_check['title'][:110]
+    #     description = result_check['description'], 160
+    #     cursor.execute(
+    #         '''INSERT INTO url_checks (url_id, status_code, h1, title,
+    #         description, created_at)
+    #         VALUES (%s, %s, %s, %s, %s, %s)''',
+    #         (url, status_code, h1, title, description, datetime.now())
+    #     )
+    #     return True
+    @execute_in_db
+    def add_check(self, url, result_check, cursor):
+        checks = cursor.execute(
+            '''INSERT INTO url_checks (url_id, status_code, h1, title,
+            description, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s)''',
+            (url, result_check['status_code'], result_check['h1'],
+             result_check['title'], result_check['description'],
+             datetime.datetime.now())
+        )
+        print(checks, 'check')
+        return checks
 
     @execute_in_db
     def find_checks_by_id(self, id, cursor):
         value = str(id)
         cursor.execute("SELECT * from urls WHERE id=%s", (value,))
-        url_id = cursor.fetchone()
-        return url_id.id if url_id else None
+        checks = cursor.fetchall()
+        return checks

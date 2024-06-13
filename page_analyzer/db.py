@@ -48,20 +48,6 @@ class DatabaseManager:
         url_data = cursor.fetchone()
         return url_data
 
-    def add_url(self, url, conn=None):
-        conn = self.execute_in_db(conn)
-        result = self.find_url_by_name(url, conn)
-        if result:
-            return result, False
-
-        current_date = datetime.datetime.now()
-        query = """INSERT INTO urls (name, created_at)
-            VALUES (%s, %s);"""
-        item_tuple = (url, current_date)
-        self.insert_url(query, item_tuple, conn)
-        result = self.find_url_by_name(url, conn)
-        return result, True
-
     @execute_in_db
     def find_url_by_id(self, id, cursor):
         cursor.execute("SELECT * from urls WHERE id=%s", (id,))
@@ -89,52 +75,17 @@ class DatabaseManager:
         urls_data = cursor.fetchall()
         return urls_data
 
-    # def fetch_and_parse_url(url):
-    #     try:
-    #         response = requests.get(url)
-    #         if response.status_code == 200:
-    #             soup = BeautifulSoup(response.content, 'html.parser')
-    #             return {
-    #                 'title': soup.find('title').text if soup.find('title')
-    #                 else None,
-    #                 'h1': soup.find('h1').text if soup.find('h1') else None,
-    #                 'description': soup.find('meta',
-    #                                          attrs={'name': 'description'})
-    #                 ['content'] if soup.find('meta',
-    #                                          attrs={'name': 'description'})
-    #                 else None,
-    #                 'status_code': response.status_code
-    #             }
-    #         else:
-    #             return {'error': 'Произошла ошибка при проверке'}
-    #     except requests.RequestException:
-    #         return {'error': 'Произошла ошибка при проверке'}
-
-    # @execute_in_db
-    # def add_check(self, url, result_check, cursor):
-    #     status_code = result_check['status_code']
-    #     h1 = result_check['h1']
-    #     title = result_check['title'][:110]
-    #     description = result_check['description'], 160
-    #     cursor.execute(
-    #         '''INSERT INTO url_checks (url_id, status_code, h1, title,
-    #         description, created_at)
-    #         VALUES (%s, %s, %s, %s, %s, %s)''',
-    #         (url, status_code, h1, title, description, datetime.now())
-    #     )
-    #     return True
-    @execute_in_db
-    def add_check(self, url, result_check, cursor):
-        print(cursor.execute(
+    @with_commit
+    def add_check(self, cursor, id, result_check):
+        cursor.execute(
             '''INSERT INTO url_checks (url_id, status_code, h1, title,
             description, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s)''',
-            (url, result_check['status_code'], result_check['h1'],
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING *''',
+            (id, result_check['status_code'], result_check['h1'],
              result_check['title'], result_check['description'],
              datetime.datetime.now())
-        ))
-        checks = cursor.fetchone()
-        print(checks, 'check')
+        )
+        checks = cursor.fetchall()
         return checks
 
     @execute_in_db
@@ -142,5 +93,4 @@ class DatabaseManager:
         value = str(id)
         cursor.execute("SELECT * from url_checks WHERE url_id=%s", (value,))
         checks = cursor.fetchall()
-        print(checks, 'view')
         return checks

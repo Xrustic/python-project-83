@@ -66,12 +66,10 @@ def url_view(id):
 def url_check(id):
     result = False
     url_item = db_manager.find_url_by_id(id)
-    print(url_item, '-----')
     if url_item:
         url = url_item.name
         id = url_item.id
         result_check = extract_page_data(url)
-        print(result_check, '---res check')
         if result_check:
             result = db_manager.add_check(id, result_check)
     if result:

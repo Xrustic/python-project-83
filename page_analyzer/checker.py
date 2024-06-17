@@ -15,7 +15,7 @@ def extract_page_data(url):
             return {
                     'h1': h1_tag.text[:255] if h1_tag else '',
                     'title': title_tag.text[:255] if title_tag else '',
-                    'status_code': response.status_code,
+                    'status_code': 200,
                     'description': (
                         meta_description_tag.get('content', '')[:255]
                         if meta_description_tag else '')

@@ -8,7 +8,7 @@ def validate(url):
     if not url:
         return 'URL обязателен для заполнения'
     if not url_validator:
-        error = 'URL не правильный'
+        error = 'Некорректный URL'
         return error
     if len(url) > 255:
         error = 'URL слишком длинный'

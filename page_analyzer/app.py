@@ -30,22 +30,21 @@ def index():
 
 @app.post('/urls')
 def add_url():
-    url_check = request.form.get('url')
-    normal_url = normalize_url(url_check)
     data = request.form.to_dict()
     url = data.get('url')
     error = validate(url)
-    validation_error = validate(normal_url)
     if error:
-        flash(validation_error, 'danger')
+        flash(error, 'danger')
         return render_template('index.html'), 422
+
+    normal_url = normalize_url(url)
     url_id = db_manager.find_url_by_name(normal_url)
     if url_id:
         flash('Страница уже существует', 'warning')
         return redirect(url_for('url_view', id=url_id))
-    url = db_manager.insert_url(normal_url)
+    new_url = db_manager.insert_url(normal_url)
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('url_view', id=url.id))
+    return redirect(url_for('url_view', id=new_url))
 
 
 @app.route('/urls')

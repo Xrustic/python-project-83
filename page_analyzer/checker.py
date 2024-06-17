@@ -8,6 +8,7 @@ def extract_page_data(url):
         response = requests.get(url)
         print(response, '-----resp')
         if response.status_code == 200:
+            print(response.status_code, '---resp, st code')
             soup = BeautifulSoup(response.text, "html.parser")
             h1_tag = soup.find('h1')
             title_tag = soup.find('title')

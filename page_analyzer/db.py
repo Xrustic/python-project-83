@@ -1,27 +1,19 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 import datetime
-import os
-# import requests
-# from bs4 import BeautifulSoup
-
-
-DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 class DatabaseManager:
-    database_url = None
-
     def __init__(self, app):
         self.app = app
 
     @staticmethod
     def execute_in_db(func):
         """Декоратор для выполнения функций соединения с базой данных."""
-        def inner(*args, **kwargs):
-            with psycopg2.connect(DATABASE_URL) as conn:
+        def inner(self, *args, **kwargs):
+            with psycopg2.connect(self.app.config['DATABASE_URL']) as conn:
                 with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
-                    result = func(cursor=cursor, *args, **kwargs)
+                    result = func(self, cursor=cursor, *args, **kwargs)
                     conn.commit()
                     return result
         return inner
@@ -30,10 +22,10 @@ class DatabaseManager:
     def with_commit(func):
         def inner(self, *args, **kwargs):
             try:
-                with psycopg2.connect(DATABASE_URL) as connection:
-                    cursor = connection.cursor(cursor_factory=NamedTupleCursor)
+                with psycopg2.connect(self.app.config['DATABASE_URL']) as conn:
+                    cursor = conn.cursor(cursor_factory=NamedTupleCursor)
                     result = func(self, cursor, *args, **kwargs)
-                    connection.commit()
+                    conn.commit()
                     return result
             except psycopg2.Error as e:
                 print(f'Ошибка при выполнении транзакции: {e}')

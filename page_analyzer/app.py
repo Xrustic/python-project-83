@@ -44,7 +44,7 @@ def add_url():
         return redirect(url_for('url_view', id=url_id))
     new_url = db_manager.insert_url(normal_url)
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('url_view', id=new_url.id))
+    return redirect(url_for('url_view', id=new_url))
 
 
 @app.route('/urls')

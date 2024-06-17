@@ -58,7 +58,8 @@ def url_view(id):
     url_item = db_manager.find_url_by_id(id)
     checks = db_manager.find_checks_by_id(id)
     if url_item:
-        return render_template('url.html', url_item=url_item, checks=checks,)
+        return render_template('url.html', url_item=url_item,
+                               checks=checks,), 200
     return render_template('not_found.html',), 404
 
 

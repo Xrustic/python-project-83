@@ -3,7 +3,7 @@ import requests
 
 
 def extract_page_data(url):
-    result = {'result': False}
+    result = False
     try:
         response = requests.get(url)
         if response.status_code == 200:

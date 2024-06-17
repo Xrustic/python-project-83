@@ -44,7 +44,7 @@ def add_url():
         return redirect(url_for('url_view', id=url_id))
     new_url = db_manager.insert_url(normal_url)
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('url_view', id=new_url))
+    return redirect(url_for('url_view', id=new_url.id))
 
 
 @app.route('/urls')
@@ -70,10 +70,10 @@ def url_check(id):
         url = url_item.name
         id = url_item.id
         result_check = extract_page_data(url)
-        if result_check:
+        if result_check == result:
+            flash('Произошла ошибка при проверке', 'danger')
+        elif result_check:
             result = db_manager.add_check(id, result_check)
     if result:
         flash('Страница успешно проверена', 'success')
-    else:
-        flash('Произошла ошибка при проверке', 'danger')
     return redirect(url_for('url_view', id=id))

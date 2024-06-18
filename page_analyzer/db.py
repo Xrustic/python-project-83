@@ -57,7 +57,7 @@ class DatabaseManager:
     def get_all_urls(self, cursor):
         query = '''
             SELECT u.id, u.name, MAX(c.created_at) AS last_checked,
-            MAX(c.status_code) AS last_status_code
+            MAX(c.status_code) AS status_code
             FROM urls u
             LEFT JOIN url_checks c ON u.id = c.url_id
             GROUP BY u.id

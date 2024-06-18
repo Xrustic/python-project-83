@@ -47,7 +47,7 @@
       {% for check in checks %}
       <tr>
         <td>{{ check.id }}</td>
-        <td>{{ check.status_code|default('200', true) }}</td>
+        <td>{{ check.status_code|default('', true) }}</td>
         <td>{{ check.h1|default('', true) }}</td>
         <td>{{ check.title|default('', true) }}</td>
         <td>{{ check.description|default('', true) }}</td>

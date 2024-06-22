@@ -1,6 +1,5 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
-import datetime
 
 
 class DatabaseManager:
@@ -34,9 +33,8 @@ class DatabaseManager:
 
     @with_commit
     def insert_url(self, cursor, url):
-        date = datetime.date.today()
-        cursor.execute("""INSERT INTO urls (name, created_at) VALUES (%s, %s)
-                       RETURNING *""", (url, date))
+        cursor.execute("""INSERT INTO urls (name) VALUES (%s)
+                       RETURNING *""", (url,))
         url_data = cursor.fetchone()
         return url_data
 
@@ -71,11 +69,10 @@ class DatabaseManager:
     def add_check(self, cursor, id, result_check):
         cursor.execute(
             '''INSERT INTO url_checks (url_id, status_code, h1, title,
-            description, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s) RETURNING *''',
+            description)
+            VALUES (%s, %s, %s, %s, %s) RETURNING *''',
             (id, result_check['status_code'], result_check['h1'],
-             result_check['title'], result_check['description'],
-             datetime.datetime.now())
+             result_check['title'], result_check['description'],)
         )
         checks = cursor.fetchall()
         return checks

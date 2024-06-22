@@ -65,14 +65,30 @@ def get_url_list(id):
 def url_check(id):
     result = False
     url_item = db_manager.find_url_by_id(id)
+    print(url_item, '---url_checks(item)')
     if url_item:
         url = url_item.name
         id = url_item.id
-        result_check = extract_page_data(url)
-        if result_check == result:
+        try:
+            result_check = extract_page_data(url)
+            print(result_check, '---url_checks(res_check)')
+            if result_check == result:
+                flash('Произошла ошибка при проверке', 'danger')
+            elif result_check:
+                result = db_manager.add_check(id, result_check)
+            if result:
+                flash('Страница успешно проверена', 'success')
+            return redirect(url_for('get_url_list', id=id))
+        except:
             flash('Произошла ошибка при проверке', 'danger')
-        elif result_check:
-            result = db_manager.add_check(id, result_check)
-    if result:
-        flash('Страница успешно проверена', 'success')
-    return redirect(url_for('get_url_list', id=id))
+            return redirect(url_for('get_url_list', id=id))
+
+
+@app.errorhandler(404)
+def page_404(e):
+    return render_template('not_found.html',), 404
+
+
+@app.errorhandler(500)
+def page_500(e):
+    return render_template('500.html',), 500

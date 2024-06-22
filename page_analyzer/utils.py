@@ -4,15 +4,12 @@ import validators
 
 def validate(url):
     url_validator = validators.url(url)
-    error = ''
     if not url:
         return 'URL обязателен для заполнения'
     if not url_validator:
-        error = 'Некорректный URL'
-        return error
+        return 'Некорректный URL'
     if len(url) > 255:
-        error = 'URL слишком длинный'
-        return error
+        return 'URL слишком длинный'
 
 
 def normalize_url(url):

@@ -21,7 +21,7 @@ urls
       <tr>
         <td>{{ url.id }}</td>
         <td>
-          <a href="{{ url_for('url_view', id=url.id) }}">
+          <a href="{{ url_for('get_url_list', id=url.id) }}">
             {{ url.name }}
           </a>
         </td>

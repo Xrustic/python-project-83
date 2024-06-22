@@ -22,39 +22,38 @@ app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
 db_manager = DatabaseManager(app)
 
 
-@app.route('/')
+@app.get('/')
 def index():
-    url = {}
-    return render_template('index.html', url=url,)
+    return render_template('index.html',)
 
 
 @app.post('/urls')
-def add_url():
-    data = request.form.to_dict()
-    url = data.get('url')
+def show_url_page():
+    url = request.form.get('url')
+    normal_url = normalize_url(url)
+    url_id = db_manager.find_url_by_name(normal_url)
     error = validate(url)
+
     if error:
         flash(error, 'danger')
         return render_template('index.html'), 422
 
-    normal_url = normalize_url(url)
-    url_id = db_manager.find_url_by_name(normal_url)
     if url_id:
         flash('Страница уже существует', 'warning')
-        return redirect(url_for('url_view', id=url_id))
+        return redirect(url_for('get_url_list', id=url_id))
     new_url = db_manager.insert_url(normal_url)
     flash('Страница успешно добавлена', 'success')
-    return redirect(url_for('url_view', id=new_url.id))
+    return redirect(url_for('get_url_list', id=new_url.id))
 
 
-@app.route('/urls')
+@app.get('/urls')
 def urls():
     urls_data = db_manager.get_all_urls()
     return render_template('urls.html', urls=urls_data)
 
 
-@app.route('/urls/<int:id>')
-def url_view(id):
+@app.get('/urls/<int:id>')
+def get_url_list(id):
     url_item = db_manager.find_url_by_id(id)
     checks = db_manager.find_checks_by_id(id)
     if url_item:
@@ -76,4 +75,4 @@ def url_check(id):
             result = db_manager.add_check(id, result_check)
     if result:
         flash('Страница успешно проверена', 'success')
-    return redirect(url_for('url_view', id=id))
+    return redirect(url_for('get_url_list', id=id))

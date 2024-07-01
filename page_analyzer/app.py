@@ -5,12 +5,12 @@ from flask import (
     render_template,
     request,
     url_for,
+    abort,
 )
 from page_analyzer.db import DatabaseManager
 from page_analyzer.utils import validate, normalize_url
 from page_analyzer.checker import extract_page_data
 import os
-from bs4 import BeautifulSoup
 import requests
 from dotenv import load_dotenv
 
@@ -66,19 +66,22 @@ def get_url_list(id):
 @app.post('/urls/<int:id>/checks')
 def url_check(id):
     url_item = db_manager.find_url_by_id(id)
-    if url_item:
-        url = url_item.name
-        id = url_item.id
-        try:
-            response = requests.get(url)
-            soup = BeautifulSoup(response.text, "html.parser")
-            result_check = extract_page_data(soup, response.status_code)
-            flash('Страница успешно проверена', 'success')
-            db_manager.add_check(id, result_check)
-            return redirect(url_for('get_url_list', id=id))
-        except Exception:
-            flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('get_url_list', id=id))
+    if not url_item:
+        abort(404)
+
+    try:
+        response = requests.get(url_item.name)
+        response.raise_for_status()
+    except requests.exceptions.RequestException:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('get_url_list', id=id))
+
+    result_check = extract_page_data(response.text)
+    result_check['url_id'] = id
+    result_check['status_code'] = response.status_code
+    db_manager.add_check(id, result_check)
+    flash('Страница успешно проверена', 'success')
+    return redirect(url_for('get_url_list', id=id))
 
 
 @app.errorhandler(404)

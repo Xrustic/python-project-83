@@ -51,7 +51,7 @@ def show_url_page():
 @app.get('/urls')
 def urls():
     urls_data = db_manager.get_all_urls()
-    return render_template('urls.html', urls=urls_data)
+    return render_template('urls/list.html', urls=urls_data)
 
 
 @app.get('/urls/<int:id>')
@@ -59,12 +59,13 @@ def get_url_list(id):
     url_item = db_manager.find_url_by_id(id)
     checks = db_manager.find_checks_by_id(id)
     if url_item:
-        return render_template('url.html', url_item=url_item, checks=checks,)
-    return render_template('not_found.html',), 404
+        return render_template('urls/detail.html', url_item=url_item,
+                               checks=checks,)
+    return render_template('errors/404.html',), 404
 
 
 @app.post('/urls/<int:id>/checks')
-def url_check(id):
+def show_url_checks(id):
     url_item = db_manager.find_url_by_id(id)
     if not url_item:
         abort(404)
@@ -86,9 +87,9 @@ def url_check(id):
 
 @app.errorhandler(404)
 def page_404(e):
-    return render_template('not_found.html',), 404
+    return render_template('errors/404.html',), 404
 
 
 @app.errorhandler(500)
 def page_500(e):
-    return render_template('500.html',), 500
+    return render_template('errors/500.html',), 500
